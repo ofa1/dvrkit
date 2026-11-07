@@ -99,6 +99,8 @@ cameras:
     engine: dvrkit
     live_provider: ha
 live:
+  lazy_load: false
+  show_image_during_load: false
   display:
     mode: grid
   controls:
@@ -151,7 +153,7 @@ For live video through the same public HTTPS connection as Home Assistant, use t
          media: video
    ```
 
-Keep the live grid and historical viewer settings from the example above. This changes only live transport; recordings still use DVRKit's HLS playback and shared timeline. MSE still requires browser support for the DVR's codec. This setup was exercised with HEVC in Chromium; native Android playback must support HEVC as well.
+Keep the live grid and historical viewer settings from the example above. This changes only live transport; recordings still use DVRKit's HLS playback and shared timeline. MSE still requires browser support for the DVR's codec. This setup was exercised with HEVC in Chromium. Android browsers also need HEVC support in MSE, not just native video playback.
 
 ## Compatibility
 
