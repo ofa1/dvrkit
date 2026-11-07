@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from urllib.parse import quote
+
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -9,6 +11,13 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import live
+from .const import (
+    CONF_LIVE_TRANSPORT,
+    CONF_RTSP_PORT,
+    DEFAULT_RTSP_PORT,
+    LIVE_TRANSPORT_RTSP,
+    LIVE_TRANSPORT_WEBSOCKET,
+)
 
 DOMAIN = "dvrkit"
 
@@ -25,7 +34,7 @@ async def async_setup_entry(
 
 
 class DVRKitCamera(Camera):
-    """A DVR channel exposed through the live preview bridge."""
+    """A DVR channel exposed through the configured live transport."""
 
     _attr_has_entity_name = True
     _attr_should_poll = False
@@ -44,5 +53,18 @@ class DVRKitCamera(Camera):
         )
 
     async def stream_source(self) -> str | None:
-        """Return a loopback HLS source for Home Assistant's stream pipeline."""
+        """Return the configured live source for Home Assistant."""
+        options = self._entry.options
+        if options.get(CONF_LIVE_TRANSPORT, LIVE_TRANSPORT_WEBSOCKET) == LIVE_TRANSPORT_RTSP:
+            data = self._entry.data
+            host = data["host"]
+            if ":" in host and not host.startswith("["):
+                host = f"[{host}]"
+            username = quote(data["username"], safe="")
+            password = quote(data["password"], safe="")
+            port = options.get(CONF_RTSP_PORT, DEFAULT_RTSP_PORT)
+            return (
+                f"rtsp://{username}:{password}@{host}:{port}/"
+                f"?chID={self._channel}&streamType=sub&linkType=tcp"
+            )
         return await live.async_stream_source(self.hass, self._entry, self._channel)

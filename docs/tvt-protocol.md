@@ -97,6 +97,7 @@ payload = bytes[header + jsonLen + offset : … + len]
 
 - Live substream and recorded main stream were captured as HEVC on the tested recorder. A restricted account with search and playback permissions could search and play recordings.
 - The recorder reported eight analog channels and `playbackMaxWin` 4. Four concurrent playback tasks opened successfully; a fifth returned error `536870982`. Other devices may have different limits.
+- The tested recorder's RTSP service accepted authenticated `DESCRIBE` for `rtsp://<host>:554/?chID=<channel>&streamType=sub&linkType=tcp`, advertising H.265 video and PCMA audio. DVRKit's optional RTSP live transport uses this substream URL with escaped credentials. RTSP support and port must be verified on other models; it is independent of the historical WebSocket playback API.
 
 ## 4a. Permissions
 

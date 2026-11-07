@@ -33,9 +33,11 @@
   "options": {
     "step": {
       "init": {
-        "title": "Playback options",
+        "title": "Playback and live options",
         "data": {
-          "playback_limit": "Maximum concurrent playbacks"
+          "playback_limit": "Maximum concurrent playbacks",
+          "live_transport": "Live transport (websocket or rtsp)",
+          "rtsp_port": "RTSP port"
         }
       }
     }

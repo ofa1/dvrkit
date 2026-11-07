@@ -52,6 +52,8 @@ DVRKit is a **custom integration**, not a Home Assistant app/add-on. It runs ins
 
 Your channels appear as camera entities. You can use them for live viewing in standard Home Assistant camera cards without installing the ACC fork.
 
+For recorders with RTSP enabled, open the integration's **Configure** options and select **RTSP** as the live transport. Set the recorder's RTSP port (usually `554`). This lets Home Assistant consume the substream directly instead of waiting for DVRKit's WebSocket-to-HLS bridge. The WebSocket bridge remains the default for recorders without a verified RTSP service.
+
 <details>
 <summary>Manual installation</summary>
 
@@ -87,6 +89,8 @@ Add a manual card to a dashboard and paste the configuration below. Replace the 
 
 ```yaml
 type: custom:advanced-camera-card
+view:
+  default: live
 cameras:
   - camera_entity: camera.dvr_channel_1
     engine: dvrkit
@@ -94,6 +98,14 @@ cameras:
   - camera_entity: camera.dvr_channel_2
     engine: dvrkit
     live_provider: ha
+live:
+  display:
+    mode: grid
+  controls:
+    thumbnails:
+      mode: none
+    timeline:
+      mode: none
 media_viewer:
   display:
     mode: grid
@@ -105,7 +117,41 @@ media_viewer:
       pan_mode: seek
 ```
 
-The card provides live viewing and recording playback. Shared timeline seeking opens a recording session for each camera at the selected time. Use groups of **at most four recording cameras** on the tested recorder.
+The card opens in a live camera grid without loading the recording timeline. Use ACC's existing recording or timeline controls to browse history; the recording viewer retains its grid and shared timeline. Shared seeking opens a recording session for each camera at the selected time. Use groups of **at most four recording cameras** on the tested recorder.
+
+### Optional: low-latency public live viewing
+
+For live video through the same public HTTPS connection as Home Assistant, use the existing [WebRTC Camera integration](https://github.com/AlexxIT/WebRTC) and ACC's `webrtc-card` provider. Its **MSE** mode carries video through an authenticated HA WebSocket proxy; it does not require a direct browser connection to the DVR, a public WebRTC media port, or Tailscale on the viewing device.
+
+1. Enable **RTSP** in DVRKit's integration options.
+2. Install **WebRTC Camera** from HACS, or follow its manual installation instructions.
+3. If it will manage a dedicated go2rtc process for MSE only, create `config/go2rtc.yaml` before adding the integration:
+
+   ```yaml
+   api:
+     listen: "127.0.0.1:1984"
+   rtsp:
+     listen: ""
+   webrtc:
+     listen: ""
+   ```
+
+   This keeps the go2rtc API on loopback and disables unnecessary inbound media listeners. Do not overwrite an existing go2rtc configuration; connect WebRTC Camera to that server instead and retain its existing security settings.
+4. Restart HA, then add **WebRTC Camera** under **Devices & services**. Its existing card resource is registered automatically.
+5. Replace each camera's live-provider settings:
+
+   ```yaml
+   cameras:
+     - camera_entity: camera.dvr_channel_1
+       engine: dvrkit
+       live_provider: webrtc-card
+       webrtc_card:
+         entity: camera.dvr_channel_1
+         mode: mse
+         media: video
+   ```
+
+Keep the live grid and historical viewer settings from the example above. This changes only live transport; recordings still use DVRKit's HLS playback and shared timeline. MSE still requires browser support for the DVR's codec. This setup was exercised with HEVC in Chromium; native Android playback must support HEVC as well.
 
 ## Compatibility
 
@@ -126,7 +172,8 @@ The card provides live viewing and recording playback. Shared timeline seeking o
 - **Shared seeking is not frame synchronization.** Cameras seek to the same requested time but buffer independently. Playback starts at an available keyframe.
 - **Sessions cover at most one hour.** They stream footage on demand rather than downloading the full recording.
 - **Calendar dates are recorder-wide.** A date indicates that at least one configured channel recorded. Each camera's available hours come from its own recording segments.
-- **Playback capacity is device-specific.** The session limit defaults to four and is configurable in the integration options. Do not exceed your recorder's limit. Live preview uses a separate task.
+- **Playback capacity is device-specific.** The session limit defaults to four and is configurable in the integration options. Do not exceed your recorder's limit. Live uses a separate RTSP connection or TVT preview task.
+- **Live and history use separate paths.** RTSP live video goes directly to Home Assistant's native streaming providers. Historical footage continues to use DVRKit's on-demand HLS endpoint. Actual live latency depends on recorder startup, keyframe cadence, the selected HA transport, browser codecs and network connectivity; RTSP alone does not guarantee public WebRTC connectivity.
 - **Events, snapshots, downloads and favorites** are not supported by the DVRKit card engine.
 
 ## Troubleshooting
@@ -145,7 +192,7 @@ If the problem persists, [open an issue](https://github.com/ofa1/dvrkit/issues).
 
 ## Privacy and security
 
-DVRKit connects directly to your DVR. Live preview passes through an in-memory, loopback-only HLS bridge and Home Assistant's stream integration. It starts when a player requests media and does not save footage.
+DVRKit connects directly to your DVR. With RTSP selected, live video flows from the DVR to Home Assistant's native streaming providers. With the WebSocket transport selected, live preview passes through an in-memory, loopback-only HLS bridge and Home Assistant's stream integration. Both start on demand and do not save footage.
 
 Recording playback URLs are **short-lived bearer capabilities**: anyone with a URL can access that stream until it expires. Do not share these URLs or logs containing them.
 
@@ -158,7 +205,7 @@ The protocol client and muxer live in `custom_components/dvrkit/tvt.py` and `cus
 Run the integration tests:
 
 ```sh
-uv run --python 3.14 --with homeassistant python -m unittest discover -s tests
+uv run --python 3.14 --with homeassistant --with numpy --with av --with PyTurboJPEG python -m unittest discover -s tests
 ```
 
 <details>

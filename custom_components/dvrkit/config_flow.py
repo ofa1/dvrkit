@@ -14,6 +14,13 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import TextSelector, TextSelectorConfig, TextSelectorType
 
+from .const import (
+    CONF_LIVE_TRANSPORT,
+    CONF_RTSP_PORT,
+    DEFAULT_RTSP_PORT,
+    LIVE_TRANSPORT_RTSP,
+    LIVE_TRANSPORT_WEBSOCKET,
+)
 from .tvt import TVTClient, TVTError
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,7 +60,7 @@ class DVRKitConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     def async_get_options_flow(config_entry):
-        """Allow tuning concurrent playback independently of connection settings."""
+        """Allow tuning playback and live transport independently of connection settings."""
         return DVRKitOptionsFlow()
 
     async def async_step_user(self, user_input: dict | None = None):
@@ -132,7 +139,7 @@ class DVRKitConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class DVRKitOptionsFlow(config_entries.OptionsFlow):
-    """Configure playback concurrency."""
+    """Configure playback concurrency and live transport."""
 
     async def async_step_init(self, user_input: dict | None = None):
         if user_input is not None:
@@ -144,7 +151,17 @@ class DVRKitOptionsFlow(config_entries.OptionsFlow):
                     vol.Required(
                         CONF_PLAYBACK_LIMIT,
                         default=self.config_entry.options.get(CONF_PLAYBACK_LIMIT, 4),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=1))
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1)),
+                    vol.Required(
+                        CONF_LIVE_TRANSPORT,
+                        default=self.config_entry.options.get(
+                            CONF_LIVE_TRANSPORT, LIVE_TRANSPORT_WEBSOCKET
+                        ),
+                    ): vol.In([LIVE_TRANSPORT_WEBSOCKET, LIVE_TRANSPORT_RTSP]),
+                    vol.Required(
+                        CONF_RTSP_PORT,
+                        default=self.config_entry.options.get(CONF_RTSP_PORT, DEFAULT_RTSP_PORT),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
                 }
             ),
         )
