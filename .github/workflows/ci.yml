@@ -14,10 +14,10 @@ jobs:
   tests-and-package:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v7
       - name: Run unit tests
         run: uv run --python 3.14 --with homeassistant --with numpy --with av --with PyTurboJPEG python -m unittest discover -s tests
       - name: Validate version and package tracked sources
@@ -35,7 +35,7 @@ jobs:
           fi
       - name: Save release archive
         if: github.event_name == 'push' && github.ref_type == 'tag'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dvrkit-integration
           path: dist/dvrkit.zip
@@ -44,7 +44,7 @@ jobs:
   hassfest:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: home-assistant/actions/hassfest@master
 
   hacs:
@@ -62,7 +62,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: dvrkit-integration
           path: dist
