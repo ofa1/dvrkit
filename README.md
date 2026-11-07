@@ -37,6 +37,7 @@ Recordings stay on your DVR. DVRKit streams them on demand, repackaging video in
 - For recording playback: the [DVRKit Advanced Camera Card fork](https://github.com/ofa1/advanced-camera-card) and a browser that supports your recordings' video codec.
 
 DVRKit is a **custom integration**, not a Home Assistant app/add-on. It runs inside Home Assistant; you do not install a separate service.
+DVRKit is configured through the Home Assistant UI and declares a dependency on Home Assistant's HTTP integration.
 
 ## Installation
 

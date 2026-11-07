@@ -1,12 +1,12 @@
 {
   "domain": "dvrkit",
   "name": "DVRKit",
-  "version": "0.1.1",
-  "documentation": "https://github.com/ofa1/dvrkit",
-  "issue_tracker": "https://github.com/ofa1/dvrkit/issues",
   "codeowners": ["@ofa1"],
   "config_flow": true,
   "dependencies": ["http"],
+  "documentation": "https://github.com/ofa1/dvrkit",
   "iot_class": "local_polling",
-  "requirements": []
+  "issue_tracker": "https://github.com/ofa1/dvrkit/issues",
+  "requirements": [],
+  "version": "0.1.1"
 }
