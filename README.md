@@ -57,8 +57,8 @@ For recorders with RTSP enabled, open the integration's **Configure** options an
 <details>
 <summary>Manual installation</summary>
 
-1. Download the [latest release](https://github.com/ofa1/dvrkit/releases/latest).
-2. Copy `custom_components/dvrkit` into your Home Assistant configuration directory at `config/custom_components/dvrkit`.
+1. Download `dvrkit.zip` from the [latest release](https://github.com/ofa1/dvrkit/releases/latest).
+2. Extract it and copy its `custom_components/dvrkit` directory into your Home Assistant configuration directory at `config/custom_components/dvrkit`.
 3. Restart Home Assistant, then add **DVRKit** under **Settings → Devices & services**.
 
 </details>
@@ -209,6 +209,20 @@ Run the integration tests:
 ```sh
 uv run --python 3.14 --with homeassistant --with numpy --with av --with PyTurboJPEG python -m unittest discover -s tests
 ```
+
+Pull requests and pushes to `main` run these tests, Hassfest, HACS validation, and a packaging/version check. The checks can also be started manually from GitHub Actions. They do not access a DVR or deploy to Home Assistant.
+
+The integration manifest is the release version source; `pyproject.toml` and `uv.lock` must match it. After committing changes, validate and build the same archive from tracked files at `HEAD`:
+
+```sh
+uv run --python 3.14 python scripts/package_release.py
+# For a release, also verify the tag against the manifest:
+uv run --python 3.14 python scripts/package_release.py --tag v0.1.1
+```
+
+The output, `dist/dvrkit.zip`, contains `custom_components/dvrkit/` at the archive root. Ignored local files, including the optional ACC bundle, are never included. Publish ACC separately using its own release archive.
+
+Pushing a `v*` tag on a commit reachable from GitHub's `main` branch runs all checks before creating a GitHub release with this archive. The tag must equal `v` followed by the manifest version. The local `public-main` branch maps to GitHub's `main`; creating a tag or release is a separate maintainer action.
 
 <details>
 <summary>Protocol debugging and recording capture</summary>
