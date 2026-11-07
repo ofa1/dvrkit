@@ -1,0 +1,43 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to a TVT DVR",
+        "description": "Enter the DVR connection details.",
+        "data": {
+          "host": "Host",
+          "port": "HTTP port",
+          "username": "Username",
+          "password": "Password",
+          "timezone": "DVR time zone (IANA name)"
+        }
+      },
+      "channels": {
+        "title": "DVR channels",
+        "description": "Confirm the number of DVR channels.",
+        "data": {
+          "channels": "Number of channels"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to the DVR.",
+      "login_failed": "The DVR rejected the request. Check the credentials and account permissions.",
+      "invalid_response": "The DVR returned an invalid response.",
+      "invalid_timezone": "Enter a valid IANA time zone, such as America/New_York."
+    },
+    "abort": {
+      "already_configured": "This DVR is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Playback options",
+        "data": {
+          "playback_limit": "Maximum concurrent playbacks"
+        }
+      }
+    }
+  }
+}
